@@ -1,13 +1,16 @@
-import type { JSX } from 'react';
-import { getInstance } from '@module-federation/modern-js-v3/runtime';
 import {
   ERROR_TYPE,
   lazyLoadComponentPlugin,
 } from '@module-federation/modern-js-v3/react';
+import { getInstance } from '@module-federation/modern-js-v3/runtime';
+import type { JSX } from 'react';
 import './index.css';
 
 const instance = getInstance();
-instance!.registerPlugins([lazyLoadComponentPlugin()]);
+if (!instance) {
+  throw new Error('Module Federation runtime instance is unavailable.');
+}
+instance.registerPlugins([lazyLoadComponentPlugin()]);
 
 function RemoteFallback({
   label,
@@ -42,17 +45,23 @@ function RemoteFallback({
   );
 }
 
-const PromoBanner = instance!.createLazyComponent({
+function RemoteLoading({ label }: { label: string }) {
+  return <output className="fragment-loading">Loading {label}...</output>;
+}
+
+const PromoBanner = instance.createLazyComponent({
   loader: () => import('promo/PromoBanner'),
   export: 'default',
+  loading: <RemoteLoading label="promo widget" />,
   fallback: ({ error, errorType }) => (
     <RemoteFallback label="Promo widget" error={error} errorType={errorType} />
   ),
 });
 
-const ProductCard = instance!.createLazyComponent({
+const ProductCard = instance.createLazyComponent({
   loader: () => import('product/ProductCard'),
   export: 'default',
+  loading: <RemoteLoading label="product widget" />,
   fallback: ({ error, errorType }) => (
     <RemoteFallback
       label="Product widget"
