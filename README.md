@@ -13,3 +13,13 @@ cd astro-server-islands
 npm install
 npm run dev
 ```
+
+### [Next.js Multi-Zones](./nextjs-multizone/)
+
+Demonstrates Next.js multi-zones — multiple independent Next.js apps on one domain, with the home zone proxying `/shop/*` to a separate shop zone via rewrites.
+
+```bash
+cd nextjs-multizone
+npm install
+npm run dev
+```

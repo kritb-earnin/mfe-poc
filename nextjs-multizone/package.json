@@ -1,0 +1,15 @@
+{
+  "name": "nextjs-multizone",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n home,shop -c blue,green \"npm run dev:home\" \"npm run dev:shop\"",
+    "dev:home": "npm run dev --prefix home",
+    "dev:shop": "npm run dev --prefix shop",
+    "build": "npm run build --prefix home && npm run build --prefix shop",
+    "start:home": "npm run start --prefix home",
+    "start:shop": "npm run start --prefix shop"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
