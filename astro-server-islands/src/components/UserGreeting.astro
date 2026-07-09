@@ -1,0 +1,43 @@
+---
+import { delay } from '../lib/delay';
+
+interface Props {
+  name: string;
+}
+
+const { name } = Astro.props;
+
+await delay(800);
+
+const renderedAt = new Date().toISOString();
+---
+
+<div class="island island-greeting">
+  <h2>Hello, {name}!</h2>
+  <p>This greeting was rendered on the server at <time datetime={renderedAt}>{renderedAt}</time>.</p>
+</div>
+
+<style>
+  .island {
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .island-greeting {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+  }
+
+  h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+    color: #065f46;
+  }
+
+  p {
+    margin: 0;
+    color: #047857;
+    font-size: 0.875rem;
+  }
+</style>

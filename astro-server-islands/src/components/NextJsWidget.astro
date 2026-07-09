@@ -1,0 +1,51 @@
+---
+import * as cheerio from 'cheerio';
+
+const widgetUrl = import.meta.env.NEXT_WIDGET_URL ?? 'http://localhost:3000/widget';
+
+let html = '';
+let error: string | null = null;
+
+try {
+  const response = await fetch(widgetUrl);
+
+  if (!response.ok) {
+    error = `Next.js widget unavailable (HTTP ${response.status})`;
+  } else {
+    const pageHtml = await response.text();
+    const $ = cheerio.load(pageHtml);
+    html = $('.next-widget-root').prop('outerHTML') ?? '';
+
+    if (!html) {
+      error = 'Next.js widget markup not found in response';
+    }
+  }
+} catch {
+  error =
+    'Next.js widget server is not running. Start it with: pnpm run dev:next';
+}
+---
+
+{error ? (
+  <div class="next-widget-error">
+    <p>{error}</p>
+  </div>
+) : (
+  <div set:html={html} />
+)}
+
+<style>
+  .next-widget-error {
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+    font-size: 0.875rem;
+  }
+
+  .next-widget-error p {
+    margin: 0;
+  }
+</style>

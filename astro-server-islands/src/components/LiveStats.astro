@@ -1,0 +1,46 @@
+---
+import { delay } from '../lib/delay';
+
+await delay(2000);
+
+const value = Math.floor(Math.random() * 1000);
+const renderedAt = new Date().toISOString();
+---
+
+<div class="island island-stats">
+  <h2>Live Stats</h2>
+  <p class="stat-value">{value}</p>
+  <p class="stat-meta">Random server value generated at <time datetime={renderedAt}>{renderedAt}</time></p>
+</div>
+
+<style>
+  .island {
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .island-stats {
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+  }
+
+  h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+    color: #1e3a8a;
+  }
+
+  .stat-value {
+    margin: 0 0 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1d4ed8;
+  }
+
+  .stat-meta {
+    margin: 0;
+    color: #2563eb;
+    font-size: 0.875rem;
+  }
+</style>
