@@ -1,0 +1,17 @@
+{
+  "name": "fetch-embed-fragments",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n host,banner,reviews -c blue,cyan,magenta \"pnpm run dev:host\" \"pnpm run dev:banner\" \"pnpm run dev:reviews\"",
+    "dev:host": "pnpm --dir host dev",
+    "dev:banner": "pnpm --dir banner-widget dev",
+    "dev:reviews": "pnpm --dir reviews-widget dev",
+    "build": "pnpm --dir host build && pnpm --dir banner-widget build && pnpm --dir reviews-widget build",
+    "start:host": "pnpm --dir host start",
+    "start:banner": "pnpm --dir banner-widget start",
+    "start:reviews": "pnpm --dir reviews-widget start"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

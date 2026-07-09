@@ -1,0 +1,65 @@
+.main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.badge {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+}
+
+.meta {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  padding: 1.25rem;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.cardTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+}
+
+.card ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #475569;
+  font-size: 0.9375rem;
+}
+
+.card li {
+  margin-bottom: 0.5rem;
+}
+
+.card li:last-child {
+  margin-bottom: 0;
+}

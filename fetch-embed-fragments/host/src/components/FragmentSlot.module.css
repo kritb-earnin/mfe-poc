@@ -1,0 +1,16 @@
+.slot {
+  min-height: 1px;
+}
+
+.error {
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
+.error p {
+  margin: 0.25rem 0 0;
+}

@@ -26,6 +26,7 @@ When editing scripts in `package.json`, prefer `pnpm`/`pnpm --dir` over `npm run
 |------|-------------|
 | `astro-server-islands/` | Astro server islands demo; includes `next-widget/` Next.js sub-app |
 | `nextjs-multizone/` | Next.js multi-zones demo; includes `home/` and `shop/` zones |
+| `fetch-embed-fragments/` | Same-page SSR fragment composition; `host/` + two widget apps |
 
 Each demo has its own `README.md`. Read it before making changes. Nested folders may also have `AGENTS.md` — follow those when working inside them.
 
@@ -45,6 +46,7 @@ Most demos start multiple dev servers (e.g. host + micro-frontend). Use the demo
 |------|---------|------|
 | astro-server-islands | `pnpm run dev` | Astro `:4321`, Next widget `:3000` |
 | nextjs-multizone | `pnpm run dev` | Home `:3000`, Shop `:3001` |
+| fetch-embed-fragments | `pnpm run dev` | Host `:3010`, Banner `:3011`, Reviews `:3012` |
 
 Always run commands from the demo's root folder unless working on a nested app directly.
 
@@ -60,6 +62,7 @@ Always run commands from the demo's root folder unless working on a nested app d
 
 - **Astro server islands** require an adapter (`@astrojs/node`). Pages can be prerendered; islands use `server:defer`.
 - **Next.js multi-zones** — home zone owns rewrites; sub-zones use `basePath`. Cross-zone links must use `<a>`, not `Link`.
+- **Fetch & embed SSR fragments** — widget apps expose `/fragment` with `#fragment-root`; host fetches in parallel and injects HTML via cheerio + `dangerouslySetInnerHTML`.
 - **Nested Next.js apps** may include framework-generated `AGENTS.md` — read and respect those when editing Next.js code.
 
 ## What to avoid
