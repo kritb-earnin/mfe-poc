@@ -18,6 +18,7 @@ corepack prepare pnpm@latest --activate
 | [astro-server-islands](./astro-server-islands/) | Astro Server Islands + Next.js SSR widget | Same page, deferred islands | `http://localhost:4321` |
 | [nextjs-multizone](./nextjs-multizone/) | Next.js Multi-Zones | Route / path level | `http://localhost:3000` |
 | [fetch-embed-fragments](./fetch-embed-fragments/) | Fetch & embed SSR HTML fragments | Same page, server-side embed | `http://localhost:3010` |
+| [modernjs-mf-ssr](./modernjs-mf-ssr/) | Modern.js v3 Module Federation SSR | Same page, runtime JS federation | `http://localhost:3020` |
 
 ### [Astro Server Islands](./astro-server-islands/)
 
@@ -146,15 +147,61 @@ Starts host (`:3010`), banner widget (`:3011`), and reviews widget (`:3012`). Se
 
 ---
 
-## Comparing the three approaches
+### [Modern.js Module Federation SSR](./modernjs-mf-ssr/)
 
-| | Server Islands | Multi-Zones | Fetch & Embed |
-|--|----------------|-------------|---------------|
-| **Split level** | Component (deferred) | Route / path | Component (same response) |
-| **Same page?** | Yes | No — one zone per path | Yes |
-| **When content loads** | After shell (client fetches islands) | On navigation to that zone's path | During host SSR (blocks until all fragments return) |
-| **Cross-framework** | Yes (demo uses Next.js widget) | Typically all Next.js | Yes — any SSR HTTP endpoint |
-| **Independent deploy** | Per island provider | Per zone | Per widget app |
+Same-page micro-frontend composition using Modern.js v3 + Module Federation 2.0 — the host loads federated React modules at runtime and server-renders them with streaming SSR.
+
+#### Architecture
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Host as HostApp_3020
+    participant Promo as PromoWidget_3021
+    participant Product as ProductWidget_3022
+
+    Browser->>Host: GET /
+    Note over Host: Stream SSR page shell
+
+    Host->>Promo: Load via mf-manifest.json
+    Promo-->>Host: PromoBanner module + CSS
+
+    Host->>Product: Load via mf-manifest.json
+    Product-->>Host: ProductCard module + CSS + data
+
+    Host-->>Browser: Single HTML stream with federated content
+```
+
+**How it works:** Each remote app exposes a React component through Module Federation (`exposes` in `module-federation.config.ts`) and serves a manifest at `/mf-manifest.json`. The host app consumes remotes using `createLazyComponent` — not bare imports — so remote CSS is injected during SSR without flicker. All apps use stream SSR mode, which is required for MF + SSR in Modern.js. Shared `react` and `react-dom` are singletons across host and remotes.
+
+| App | Port | Role |
+|-----|------|------|
+| Host | 3020 | Consumer — composes federated components on one page |
+| Promo widget | 3021 | Provider — exposes `PromoBanner` |
+| Product widget | 3022 | Provider — exposes `ProductCard` with SSR data fetch |
+
+**Best for:** Same-page composition with true runtime module federation, independent deploys, and full React SSR/hydration — the pattern Next.js App Router lacks native support for.
+
+```bash
+cd modernjs-mf-ssr
+pnpm install
+pnpm run dev
+```
+
+Starts host (`:3020`), promo widget (`:3021`), and product widget (`:3022`). See [modernjs-mf-ssr/README.md](./modernjs-mf-ssr/README.md) for details.
+
+---
+
+## Comparing the approaches
+
+| | Server Islands | Multi-Zones | Fetch & Embed | MF SSR |
+|--|----------------|-------------|---------------|--------|
+| **Split level** | Component (deferred) | Route / path | Component (same response) | Component (federated JS) |
+| **Same page?** | Yes | No — one zone per path | Yes | Yes |
+| **When content loads** | After shell (client fetches islands) | On navigation to that zone's path | During host SSR | During host SSR (stream) |
+| **Cross-framework** | Yes (demo uses Next.js widget) | Typically all Next.js | Yes — any SSR HTTP endpoint | React via MF (Modern.js) |
+| **Independent deploy** | Per island provider | Per zone | Per widget app | Per remote app |
+| **Client hydration** | Partial (islands only) | Full page per zone | None (static HTML) | Full federated components |
 
 ## Repo layout
 
@@ -166,10 +213,14 @@ mfe-poc/
 ├── nextjs-multizone/         # Demo 2
 │   ├── home/                 # Main zone (nested app)
 │   └── shop/                 # Shop zone (nested app)
-└── fetch-embed-fragments/    # Demo 3
-    ├── host/                 # Composes fragments on one page
-    ├── banner-widget/        # SSR fragment provider
-    └── reviews-widget/       # SSR fragment provider
+├── fetch-embed-fragments/    # Demo 3
+│   ├── host/                 # Composes fragments on one page
+│   ├── banner-widget/        # SSR fragment provider
+│   └── reviews-widget/       # SSR fragment provider
+└── modernjs-mf-ssr/          # Demo 4
+    ├── host/                 # MF consumer
+    ├── promo-widget/         # MF remote provider
+    └── product-widget/       # MF remote provider
 ```
 
 Each demo is independent — install dependencies and run scripts from within its folder. Nested apps (e.g. `next-widget/`, `home/`, `shop/`) are managed by their parent demo's scripts.

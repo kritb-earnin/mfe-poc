@@ -1,0 +1,44 @@
+.card {
+  border-radius: 8px;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: #eff6ff;
+  font-family: system-ui, sans-serif;
+}
+
+.badge {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.description {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.button {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1e3a8a;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: #eff6ff;
+}

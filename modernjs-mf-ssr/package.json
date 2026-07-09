@@ -1,0 +1,17 @@
+{
+  "name": "modernjs-mf-ssr",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n host,promo,product -c blue,cyan,green \"pnpm run dev:host\" \"pnpm run dev:promo\" \"pnpm run dev:product\"",
+    "dev:host": "pnpm --dir host dev",
+    "dev:promo": "pnpm --dir promo-widget dev",
+    "dev:product": "pnpm --dir product-widget dev",
+    "build": "pnpm --dir promo-widget build && pnpm --dir product-widget build && pnpm --dir host build",
+    "serve:host": "pnpm --dir host serve",
+    "serve:promo": "pnpm --dir promo-widget serve",
+    "serve:product": "pnpm --dir product-widget serve"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
