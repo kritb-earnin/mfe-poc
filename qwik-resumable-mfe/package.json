@@ -1,0 +1,15 @@
+{
+  "name": "qwik-resumable-mfe",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n host,remote -c blue,cyan \"pnpm run dev:host\" \"pnpm run dev:remote\"",
+    "dev:host": "pnpm --filter host-shell dev",
+    "dev:remote": "pnpm --filter remote-analytics dev",
+    "build": "pnpm --filter remote-analytics build && pnpm --filter host-shell build",
+    "start:host": "pnpm --filter host-shell preview",
+    "start:remote": "pnpm --filter remote-analytics preview"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

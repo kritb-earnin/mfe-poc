@@ -1,0 +1,74 @@
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.shell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: #111827;
+  color: white;
+}
+
+.shell__brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.shell__badge {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.shell__body {
+  display: flex;
+  min-height: calc(100vh - 56px);
+}
+
+.shell__sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: #f3f4f6;
+  padding: 1.5rem 0;
+}
+
+.shell__sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.shell__nav-item {
+  padding: 0.6rem 1.5rem;
+  color: #4b5563;
+}
+
+.shell__nav-item--active {
+  background: #e5e7eb;
+  color: #111827;
+  font-weight: 600;
+}
+
+.shell__main {
+  flex: 1;
+  padding: 2rem;
+}
+
+.panel {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.remote-slot--error {
+  padding: 1rem;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+}

@@ -19,6 +19,7 @@ corepack prepare pnpm@latest --activate
 | [nextjs-multizone](./nextjs-multizone/) | Next.js Multi-Zones | Route / path level | `http://localhost:3000` |
 | [fetch-embed-fragments](./fetch-embed-fragments/) | Fetch & embed SSR HTML fragments | Same page, server-side embed | `http://localhost:3010` |
 | [modernjs-mf-ssr](./modernjs-mf-ssr/) | Modern.js v3 Module Federation SSR | Same page, runtime JS federation | `http://localhost:3020` |
+| [qwik-resumable-mfe](./qwik-resumable-mfe/) | Qwik cross-origin container + resumability | Same page, server-fetched container | `http://localhost:5173` |
 
 ### [Astro Server Islands](./astro-server-islands/)
 
@@ -192,16 +193,58 @@ Starts host (`:3020`), promo widget (`:3021`), and product widget (`:3022`). See
 
 ---
 
+### [Qwik Resumable Micro-Frontend](./qwik-resumable-mfe/)
+
+Same-page composition where the embedded app stays fully interactive — the host server-fetches an independent Qwik City app's SSR output and resumes it in place using Qwik's own cross-origin container protocol, with no shared bundle and no hydration in either app.
+
+#### Architecture
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Host as HostShell_5173
+    participant Remote as RemoteAnalytics_5174
+
+    Browser->>Host: GET /
+    Host->>Remote: GET /widget/ (server-side fetch, in routeLoader$)
+    Remote-->>Host: SSR HTML + qwik/json state
+    Host-->>Browser: Dashboard shell + nested q:container (q:base = remote origin)
+    Note over Browser: Only qwikloader runs — no component code executes
+
+    Browser->>Browser: user clicks Increment
+    Browser->>Remote: GET /build/q-*.js (lazy interaction chunk)
+    Note over Browser: Counter resumes in place — no host code involved
+```
+
+**How it works:** `remote-analytics` exposes a chrome-free `/widget/` route. The host's `routeLoader$` fetches that URL server-side, and `cheerio` extracts the widget's root element plus its serialized `qwik/json` state. That markup is rebuilt inside a new `q:container` element with its `q:base` rewritten to an absolute, cross-origin URL (`http://localhost:5174/build/`), then injected via `dangerouslySetInnerHTML`. The host's own qwikloader resolves the nested container's event handlers against that `q:base`, so clicking the widget fetches its interaction chunk directly from the remote's origin — never from the host's bundle.
+
+| App | Port | Role |
+|-----|------|------|
+| host-shell | 5173 | Enterprise dashboard shell; fetches and composes the remote widget |
+| remote-analytics | 5174 | Independent Qwik City app exposing a resumable widget at `/widget/` |
+
+**Best for:** Composing independently deployed, fully interactive micro-frontends without hydration cost or a shared JavaScript bundle — Qwik's resumability model applied across app boundaries instead of just component boundaries.
+
+```bash
+cd qwik-resumable-mfe
+pnpm install
+pnpm run dev
+```
+
+Starts host-shell (`:5173`) and remote-analytics (`:5174`). See [qwik-resumable-mfe/README.md](./qwik-resumable-mfe/README.md) for details, including how to verify that no application JavaScript runs on load and that interaction code loads lazily from the remote's own origin.
+
+---
+
 ## Comparing the approaches
 
-| | Server Islands | Multi-Zones | Fetch & Embed | MF SSR |
-|--|----------------|-------------|---------------|--------|
-| **Split level** | Component (deferred) | Route / path | Component (same response) | Component (federated JS) |
-| **Same page?** | Yes | No — one zone per path | Yes | Yes |
-| **When content loads** | After shell (client fetches islands) | On navigation to that zone's path | During host SSR | During host SSR (stream) |
-| **Cross-framework** | Yes (demo uses Next.js widget) | Typically all Next.js | Yes — any SSR HTTP endpoint | React via MF (Modern.js) |
-| **Independent deploy** | Per island provider | Per zone | Per widget app | Per remote app |
-| **Client hydration** | Partial (islands only) | Full page per zone | None (static HTML) | Full federated components |
+| | Server Islands | Multi-Zones | Fetch & Embed | MF SSR | Qwik Resumable MFE |
+|--|----------------|-------------|---------------|--------|---------------------|
+| **Split level** | Component (deferred) | Route / path | Component (same response) | Component (federated JS) | Component (container) |
+| **Same page?** | Yes | No — one zone per path | Yes | Yes | Yes |
+| **When content loads** | After shell (client fetches islands) | On navigation to that zone's path | During host SSR | During host SSR (stream) | During host SSR (server-fetched) |
+| **Cross-framework** | Yes (demo uses Next.js widget) | Typically all Next.js | Yes — any SSR HTTP endpoint | React via MF (Modern.js) | Qwik-to-Qwik only (container protocol) |
+| **Independent deploy** | Per island provider | Per zone | Per widget app | Per remote app | Per container app |
+| **Client hydration** | Partial (islands only) | Full page per zone | None (static HTML) | Full federated components | None — resumed, not hydrated |
 
 ## Repo layout
 
@@ -217,10 +260,14 @@ mfe-poc/
 │   ├── host/                 # Composes fragments on one page
 │   ├── banner-widget/        # SSR fragment provider
 │   └── reviews-widget/       # SSR fragment provider
-└── modernjs-mf-ssr/          # Demo 4
-    ├── host/                 # MF consumer
-    ├── promo-widget/         # MF remote provider
-    └── product-widget/       # MF remote provider
+├── modernjs-mf-ssr/          # Demo 4
+│   ├── host/                 # MF consumer
+│   ├── promo-widget/         # MF remote provider
+│   └── product-widget/       # MF remote provider
+└── qwik-resumable-mfe/       # Demo 5
+    └── apps/
+        ├── host-shell/       # Fetches and resumes the remote container
+        └── remote-analytics/ # Independent, resumable Qwik City MFE
 ```
 
 Each demo is independent — install dependencies and run scripts from within its folder. Nested apps (e.g. `next-widget/`, `home/`, `shop/`) are managed by their parent demo's scripts.

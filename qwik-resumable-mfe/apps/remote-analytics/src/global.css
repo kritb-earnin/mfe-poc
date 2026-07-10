@@ -1,0 +1,33 @@
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 2rem;
+  color: #1a1a1a;
+}
+
+.counter-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #eef2ff;
+}
+
+.counter-widget__count {
+  margin: 0;
+}
+
+.counter-widget__button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4338ca;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.counter-widget__button:hover {
+  background: #372aa8;
+}
