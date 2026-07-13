@@ -6,12 +6,25 @@ body {
 
 .counter-widget {
   display: inline-flex;
-  align-items: center;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
   padding: 1rem 1.25rem;
   border: 1px solid #c7d2fe;
   border-radius: 8px;
   background: #eef2ff;
+}
+
+.counter-widget__session {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #4338ca;
+}
+
+.counter-widget__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .counter-widget__count {

@@ -13,9 +13,26 @@ interface FetchRemoteWidgetOptions {
    * cross-origin `q:base` on the injected container.
    */
   assetBase: string;
+  /**
+   * The host's own session identifier (read from its `session` cookie),
+   * forwarded so the remote can render session-aware content. Omitted
+   * entirely if the host has no session yet.
+   */
+  sessionId?: string;
 }
 
 const CONTAINER_ID = "remote-analytics-container";
+
+/**
+ * Header the remote uses to verify a widget request actually came from a
+ * trusted host, rather than an arbitrary caller presenting a forged
+ * `session` cookie. This is a placeholder for local development only —
+ * override via the `INTERNAL_TRUST_SECRET` env var on both apps in any real
+ * deployment, and never reuse this literal value in production.
+ */
+export const INTERNAL_TRUST_HEADER = "x-internal-trust";
+const INTERNAL_TRUST_SECRET =
+  process.env.INTERNAL_TRUST_SECRET ?? "dev-only-shared-secret";
 
 /**
  * Server-side fetches the remote MFE's isolated widget route and rebuilds
@@ -33,9 +50,22 @@ const CONTAINER_ID = "remote-analytics-container";
 export async function fetchRemoteWidget({
   widgetUrl,
   assetBase,
+  sessionId,
 }: FetchRemoteWidgetOptions): Promise<RemoteWidgetPayload> {
   try {
-    const response = await fetch(widgetUrl, { cache: "no-store" });
+    // Only the specific cookie the remote needs is forwarded — not the raw
+    // incoming `Cookie` header — so the remote never sees any of the host's
+    // other cookies. The trust header alongside it proves this request
+    // came from the host itself: forwarding `session` alone would let
+    // anyone with direct network access to the remote impersonate a
+    // logged-in user just by inventing their own cookie value.
+    const response = await fetch(widgetUrl, {
+      cache: "no-store",
+      headers: {
+        ...(sessionId && { cookie: `session=${sessionId}` }),
+        [INTERNAL_TRUST_HEADER]: INTERNAL_TRUST_SECRET,
+      },
+    });
 
     if (!response.ok) {
       return { ok: false, error: `HTTP ${response.status} from ${widgetUrl}` };
@@ -57,6 +87,18 @@ export async function fetchRemoteWidget({
     // from the serialized state above.
     const syncFuncsScript =
       $('script[q\\:func="qwik/json"]').prop("outerHTML") ?? "";
+    // Qwik City only registers global document listeners (e.g. "click") for
+    // event types it sees used somewhere in *its own* render tree. Since the
+    // host's tree never sees this markup (it arrives as a raw HTML string,
+    // bypassing JSX), the host's qwikloader would otherwise never listen for
+    // "click" at all. The remote's own page already declares exactly which
+    // events its tree needs via a `window.qwikevents.push(...)` script —
+    // relaying it verbatim keeps the host in sync without guessing.
+    const eventsScript =
+      $("script")
+        .filter((_, el) => ($(el).html() ?? "").includes("window.qwikevents"))
+        .first()
+        .prop("outerHTML") ?? "";
 
     const containerAttrs: Record<string, string> = {
       id: CONTAINER_ID,
@@ -73,7 +115,7 @@ export async function fetchRemoteWidget({
 
     return {
       ok: true,
-      html: `${openTag}${widgetRoot}${stateScript}${syncFuncsScript}</div>`,
+      html: `${openTag}${widgetRoot}${stateScript}${syncFuncsScript}${eventsScript}</div>`,
     };
   } catch {
     return { ok: false, error: `Could not reach ${widgetUrl}` };

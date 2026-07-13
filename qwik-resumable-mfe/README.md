@@ -44,6 +44,24 @@ sequenceDiagram
 
 No Module Federation, no iframes, and no shared JavaScript bundle — the only contract between the two apps is an HTTP response and Qwik's own serialization format.
 
+## Forwarding server-side context (session auth)
+
+The remote's SSR fetch happens entirely server-to-server, so the host is free to attach whatever context the remote needs as plain HTTP headers — no browser involved, no CORS preflight. This demo forwards a session identifier as a concrete example:
+
+1. [`src/routes/plugin.ts`](apps/host-shell/src/routes/plugin.ts) stands in for a real login flow: it issues a demo `session` cookie on the host's own domain the first time a browser visits, via `onRequest` (runs before every route in the app).
+2. [`src/routes/index.tsx`](apps/host-shell/src/routes/index.tsx)'s `routeLoader$` reads that cookie and passes its value into `fetchRemoteWidget`.
+3. [`src/lib/fetchRemoteWidget.ts`](apps/host-shell/src/lib/fetchRemoteWidget.ts) forwards it as a `Cookie: session=<id>` header on the outgoing fetch — only that one cookie, never the host's full incoming `Cookie` header — alongside an `x-internal-trust` header carrying a shared secret.
+4. On the remote, [`src/routes/widget/index.tsx`](apps/remote-analytics/src/routes/widget/index.tsx) exports an `onRequest` guard that rejects any request missing the correct `x-internal-trust` value with `403`, then a `routeLoader$` that reads the forwarded `session` cookie with the remote's own `cookie.get()` — no custom parsing needed, since it arrived as a normal `Cookie` header.
+5. The resolved session is passed down into `CounterWidget`, which renders it (`Session forwarded from host: <id>`) so you can see it land — [`src/components/counter-widget.tsx`](apps/remote-analytics/src/components/counter-widget.tsx).
+
+**Why the trust header, not just the cookie:** forwarding `session` alone proves nothing on its own — the remote's `/widget/` route is reachable directly over the network (`curl http://localhost:5174/widget/`), so anyone could invent a `Cookie: session=whatever` header and impersonate a logged-in user. The `x-internal-trust` header is what actually proves a request came from host-shell rather than an arbitrary caller; the demo's default secret (`dev-only-shared-secret`) is a local-dev placeholder only — override it with the `INTERNAL_TRUST_SECRET` env var (set identically on both apps) in any real deployment, and never reuse the literal default value in production. Try it yourself:
+
+```bash
+curl -i http://localhost:5174/widget/                                              # 403 — no trust header
+curl -i -H "x-internal-trust: dev-only-shared-secret" http://localhost:5174/widget/ # 200
+curl -i http://localhost:5174/                                                     # 200 — standalone route, unguarded
+```
+
 ## What to look for (and one honest caveat)
 
 - **No shared bundle:** [`apps/host-shell/package.json`](apps/host-shell/package.json) has zero dependency on `remote-analytics`. The only new dependency added to the host is `cheerio`, for parsing the fetched HTML.
@@ -128,12 +146,14 @@ qwik-resumable-mfe/
     │       ├── components/
     │       │   ├── enterprise-shell.tsx     # static dashboard chrome, no interactivity
     │       │   └── remote-widget-slot.tsx   # mounts the injected container
-    │       ├── lib/fetchRemoteWidget.ts     # fetch + cheerio extract + q:base rewrite
-    │       └── routes/index.tsx             # routeLoader$ server-fetches the widget
+    │       ├── lib/fetchRemoteWidget.ts     # fetch + cheerio extract + q:base rewrite + session/trust headers
+    │       └── routes/
+    │           ├── plugin.ts                # issues a demo session cookie on first visit
+    │           └── index.tsx                # routeLoader$ server-fetches the widget
     └── remote-analytics/
         └── src/
             ├── components/counter-widget.tsx  # component$() + useStore() + $() handler
-            └── routes/widget/index.tsx        # isolated, chrome-free embeddable route
+            └── routes/widget/index.tsx        # isolated, chrome-free embeddable route + trust guard
 ```
 
 ## Related demos

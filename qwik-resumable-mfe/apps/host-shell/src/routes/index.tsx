@@ -4,12 +4,14 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { EnterpriseShell } from "~/components/enterprise-shell";
 import { RemoteWidgetSlot } from "~/components/remote-widget-slot";
 import { fetchRemoteWidget } from "~/lib/fetchRemoteWidget";
+import { SESSION_COOKIE } from "~/routes/plugin";
 
 const widgetUrl = process.env.REMOTE_WIDGET_URL ?? "http://localhost:5174/widget/";
 const assetBase = process.env.REMOTE_ASSET_BASE ?? "http://localhost:5174/build/";
 
-export const useRemoteWidget = routeLoader$(() => {
-  return fetchRemoteWidget({ widgetUrl, assetBase });
+export const useRemoteWidget = routeLoader$(({ cookie }) => {
+  const sessionId = cookie.get(SESSION_COOKIE)?.value;
+  return fetchRemoteWidget({ widgetUrl, assetBase, sessionId });
 });
 
 export default component$(() => {
